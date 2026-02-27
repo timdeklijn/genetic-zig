@@ -1,5 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
+const rg = @import("raygui");
 const rand = std.crypto.random;
 const Population = @import("genetic.zig").Population;
 
@@ -25,21 +26,36 @@ pub fn main() !void {
     var print_buf: [200:0]u8 = undefined;
 
     var gen: usize = 0;
+    const running: bool = false;
+
+    // rg.setStyle(rg.Control, @intFromEnum(rg.GuiDefaultProperty.TEXT_SIZE), 50);
+    // rg.guiSetStyle(rg.GuiControl.DEFAULT, @intFromEnum(rg.GuiDefaultProperty.TEXT_SIZE), 50);
+
+    var text_box_buffer: [80:0]u8 = [_:0]u8{0} ** 80;
+    const text_box_text: []const u8 = "Hello, World!";
+    @memcpy(text_box_buffer[0..text_box_text.len], text_box_text);
 
     rl.initWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Genetic Algorithm");
     defer rl.closeWindow();
     rl.setTargetFPS(60);
 
+    rg.loadStyleDefault();
+    rg.setStyle(.default, .{ .default = .text_size }, 50);
+
     while (!rl.windowShouldClose()) {
         rl.beginDrawing();
         defer rl.endDrawing();
 
-        try pop.nextGeneration();
-        // TODO: get the top n back.
-        const ind = pop.getBest();
+        _ = rg.textBox(rl.Rectangle{ .x = 40.0, .y = 40.0, .width = 720, .height = 70 }, &text_box_buffer, text_box_buffer.len, true);
 
-        const gen_string = try std.fmt.bufPrintZ(&print_buf, "{d:<5}: {s} - {d:.3}", .{ gen, ind.dna.seq.items, ind.dna.score });
-        rl.drawText(gen_string, 40, 400, 50, .black);
+        if (running) {
+            try pop.nextGeneration();
+            // TODO: get the top n back.
+            const ind = pop.getBest();
+
+            const gen_string = try std.fmt.bufPrintZ(&print_buf, "{d:<5}: {s} - {d:.3}", .{ gen, ind.dna.seq.items, ind.dna.score });
+            rl.drawText(gen_string, 40, 400, 50, .black);
+        }
 
         rl.clearBackground(.white);
         gen += 1;
